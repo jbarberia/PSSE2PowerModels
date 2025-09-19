@@ -7,6 +7,9 @@ IFILE = casos/inv25pi.sav
 IFILE = casos/inv25va.sav
 OFILE = tmp
 
+check_complete_solution: build_pm
+	julia scripts/check_complete_solution.jl $(OFILE).sav $(OFILE).json
+
 check_basic_data: build_pm
 	julia scripts/check_basic_data.jl $(OFILE).json
 
