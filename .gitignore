@@ -1,0 +1,4 @@
+*.sld
+casos/*.py
+casos/*/*.py
+tmp.*
