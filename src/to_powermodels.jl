@@ -60,8 +60,8 @@ function non_transformer_branch_to_pm()
             "br_status" => 1,
             "br_r" => brn["RX"][i] |> real,
             "br_x" => brn["RX"][i] |> imag,
-            "b_fr" => brn["CHARGING"][i] / 2,
-            "b_to" => brn["CHARGING"][i] / 2,
+            "b_fr" => brn["CHARGING"][i] / 2 + imag(brn["FROMSHNT"][i]),
+            "b_to" => brn["CHARGING"][i] / 2 + imag(brn["TOSHNT"][i]),
             "g_fr" => 0.0,
             "g_to" => 0.0,
             "tap" => 1.0,
@@ -300,9 +300,10 @@ function sw_shunt_to_pm()
 
     data = Vector{Dict{String,Any}}(undef, nb)
     for i in 1:nb
+        bus = Int(shunt["NUMBER"][i])
         data[i] = Dict(
-            "shunt_bus" => shunt["NUMBER"][i],            
-            "source_id" => ["SWS", shunt["NUMBER"][i]],
+            "shunt_bus" => bus,      
+            "source_id" => ["SWS", bus],
             "gs" => 0.0,
             "bs" => shunt["BSWNOM"][i] / baseMVA,             
             "status" => shunt["STATUS"][i],
