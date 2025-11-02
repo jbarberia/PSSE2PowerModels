@@ -16,6 +16,8 @@ module PowerNetworkModeling
 
     export psspy
     export build_pm_data
+
     export merge_zi_connected_buses!
+    export correct_pv_bus_type!
 
 end

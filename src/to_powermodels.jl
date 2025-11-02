@@ -194,7 +194,7 @@ function three_winding_branch_to_pm()
             "bus_type" => 1,
             "base_kv" => 1.0,
             "vm" => vm,
-            "va" => va,
+            "va" => va * pi / 180,
             "area" => area,
             "zone" => zone,
             "owner" => owner,

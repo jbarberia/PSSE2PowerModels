@@ -4,12 +4,12 @@ using JuMP
 using Ipopt
 using Test
 
-
 psspy.progress_output(6) # No output
 
 optimizer = JuMP.optimizer_with_attributes(
     Ipopt.Optimizer,
     "tol"=>1e-6,
+    "max_iter"=>200,
     "print_level"=>0,
 )
 
@@ -26,9 +26,15 @@ function solve()
         options8=0,
     )
     data = build_pm_data()
-    resolve_swithces!(data)
+    resolve_switches!(data)
     merge_zi_connected_buses!(data)
+    correct_pv_bus_type!(data)    
+    set_ac_pf_start_values!(data)
     results = solve_ac_pf(data, optimizer)
+    
+    # is solved
+    @test results["termination_status"] in (LOCALLY_SOLVED, OPTIMAL)
+    @test results["primal_status"] == FEASIBLE_POINT
     
     # postprocess
     update_data!(data, results["solution"])
@@ -103,19 +109,43 @@ end
 
 
 @testset failfast = true "SIP" begin
+    # Se hace un equivalente de ALUAR para evitar controles remotos e interruptores
     psspy.read(0,"data/SIP.raw")
     data = solve()
-    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)    
     test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
 end
 
 
 @testset failfast = true "CUYO" begin
+    # Entre Lujan de cuyo y polo petroquimico hay lineas sin impedancia
     psspy.read(0,"data/CUYO.raw")
     data = solve()
     test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
     test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
 end
+
+
+@testset failfast = true "COMAHUE_SIP" begin
+    # Dos regiones electricas con diversos componentes
+    # ALUAR modelado    
+    psspy.case("data/COMAHUE_SIP.sav")
+    data = solve()
+    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+    test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
+end
+
+
+# @testset failfast = true "GBA" begin
+#     # 
+#     # psspy.read(0,"data/GBA.raw")
+#     psspy.case("data/GBA.sav")
+#     data = solve()
+#     test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+#     test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
+# end
+
+
 
 
 

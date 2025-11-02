@@ -4,6 +4,7 @@ function merge_zi_connected_buses!(data; threshold=0.0001)
 
     for (i, branch) in data["branch"]
         branch["br_status"] == 0 && continue
+        branch["source_id"][1] != "LII" && continue
         abs(branch["br_x"]) > threshold && continue
         
         f_bus, t_bus = branch["f_bus"]::Int, branch["t_bus"]::Int
@@ -59,4 +60,50 @@ function merge_zi_connected_buses!(data; threshold=0.0001)
     end
 
     correct_branch_directions!(data)
+end
+
+
+function correct_pv_bus_type!(data)    
+    # map buses -> generators
+    bus_gens = Dict{Int, Vector{String}}()
+    bus_gens_status = Dict{Int, Vector{Int}}()
+
+    for (i, bus) in data["bus"]
+        bus_gens[bus["index"]] = Int[]
+        bus_gens_status[bus["index"]] = Int[]
+    end
+
+    for (i, gen) in data["gen"]
+        bus_id = gen["gen_bus"]
+        gen_status = gen["gen_status"]
+
+        push!(bus_gens[bus_id], i)
+        push!(bus_gens_status[bus_id], gen_status)
+    end
+
+    # correct bus codes
+    for (bus_i, machine_statuses) in bus_gens_status
+        bus_key = string(bus_i)
+        !haskey(data["bus"], bus_key) && continue
+        
+            
+        bus = data["bus"][bus_key]
+        all_oos = isempty(machine_statuses) || sum(machine_statuses) == 0
+        
+        # PV Buses without Generators
+        if all_oos && bus["bus_type"] == 2
+            data["bus"][bus_key]["bus_type"] = 1
+            @info "setting bus $bus_i from type 2 to type 1 - No generators connected"
+        end
+        
+        # Generators in PQ Buses
+        if !all_oos && bus["bus_type"] == 1
+            if haskey(bus_gens, bus_i)
+                for gen_i in bus_gens[bus_i]        
+                    data["gen"][gen_i]["gen_status"] = 0
+                    @info "setting gen $gen_i out of service, it is connected to type 1 bus"
+                end
+            end
+        end
+    end
 end
