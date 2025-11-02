@@ -98,10 +98,10 @@ function transformer_branch_to_pm()
             "t_bus" => trn["WIND2NUMBER"][i],
             "source_id" => ["TR", trn["FROMNUMBER"][i], trn["TONUMBER"][i], trn["ID"][i]],
             "br_status" => 1,
-            "br_r" => trn["RXACT"][i] |> real,
-            "br_x" => trn["RXACT"][i] |> imag,
+            "br_r" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> real,   # POM 4.6 Tap Changing Transformers
+            "br_x" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> imag,   # POM 4.6 Tap Changing Transformers
             "b_fr" => trn["YMAG"][i] |> imag,
-            "b_to" => 0.0,
+            "b_to" => trn["YMAG"][i] |> real,
             "g_fr" => 0.0,
             "g_to" => 0.0,
             "tap" => trn["RATIO"][i] / trn["RATIO2"][i],

@@ -136,14 +136,15 @@ end
 end
 
 
-# @testset failfast = true "GBA" begin
-#     # 
-#     # psspy.read(0,"data/GBA.raw")
-#     psspy.case("data/GBA.sav")
-#     data = solve()
-#     test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
-#     test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
-# end
+@testset failfast = true "GBA" begin
+    # El GBA y lineas de 220 kV de Transener
+    # Los controles de tesnion quedan locales sobre barras de generadoras
+    # No hay control conjunto en EZ por como esta planteado el modelo en PM    
+    psspy.read(0,"data/GBA.raw")    
+    data = solve()
+    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+    test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
+end
 
 
 
