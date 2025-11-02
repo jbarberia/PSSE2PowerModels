@@ -27,6 +27,7 @@ function solve()
     )
     data = build_pm_data()
     resolve_swithces!(data)
+    merge_zi_connected_buses!(data)
     results = solve_ac_pf(data, optimizer)
     
     # postprocess
@@ -56,6 +57,8 @@ function test_powerflow(data; p_atol=1e-4, q_atol=1e-4)
     for (i, brn) in data["branch"]        
         if brn["source_id"][1] == "LII"
             ibus, jbus, ckt = brn["source_id"][2:end]
+            ibus != brn["f_bus"] && continue
+            jbus != brn["t_bus"] && continue
             ierr, flow = psspy.brnflo(ibus, jbus, ckt)            
             pf = flow / baseMVA |> real
             qf = flow / baseMVA |> imag
@@ -101,6 +104,14 @@ end
 
 @testset failfast = true "SIP" begin
     psspy.read(0,"data/SIP.raw")
+    data = solve()
+    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+    test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
+end
+
+
+@testset failfast = true "CUYO" begin
+    psspy.read(0,"data/CUYO.raw")
     data = solve()
     test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
     test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
