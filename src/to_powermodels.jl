@@ -210,7 +210,7 @@ end
 function machine_to_pm()
     baseMVA = psspy.sysmva()
     
-    intstr = ["NUMBER"]
+    intstr = ["NUMBER", "STATUS"]
     charstr = ["ID"]
     realstr = ["PGEN", "QGEN", "PMAX", "PMIN", "QMAX", "QMIN"]
     cplxstr = ["ZSORCE"]
@@ -244,7 +244,7 @@ function machine_to_pm()
             "qmax" => mach["QMAX"][i] / baseMVA,
             "vg" => vs,
             "vg_bus" => ireg,
-            "gen_status" => 1,
+            "gen_status" => mach["STATUS"][i],
         )
     end
 
