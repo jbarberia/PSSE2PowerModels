@@ -43,7 +43,8 @@ function test_voltage(data; vm_atol=1e-4, va_atol=1e-4)
         ibus = parse(Int, i)
         ibus >= 100_000 && continue
         ierr, vm = psspy.busdat(ibus, "PU")
-        ierr, va = psspy.busdat(ibus, "ANGLE")        
+        ierr, va = psspy.busdat(ibus, "ANGLE")
+        # @show ibus
         @test isapprox(res_bus["vm"], vm, atol=vm_atol)
         @test isapprox(res_bus["va"], va, atol=va_atol)
     end    
@@ -58,6 +59,7 @@ function test_powerflow(data; p_atol=1e-4, q_atol=1e-4)
             ierr, flow = psspy.brnflo(ibus, jbus, ckt)            
             pf = flow / baseMVA |> real
             qf = flow / baseMVA |> imag
+            # @show (ibus, jbus, ckt)
             @test(isapprox(brn["pf"], pf, atol=p_atol))
             @test(isapprox(brn["qf"], qf, atol=q_atol))
         end        
@@ -78,6 +80,14 @@ end
     data = solve()
     test_voltage(data)
     test_powerflow(data)
+end
+
+
+@testset failfast = true "IEEE300" begin    
+    psspy.read(0,"data/IEEE300Bus.raw")
+    data = solve()
+    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+    test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
 end
 
 

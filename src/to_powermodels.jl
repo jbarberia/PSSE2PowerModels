@@ -78,7 +78,7 @@ end
 function transformer_branch_to_pm()
     intstr = ["FROMNUMBER", "TONUMBER", "WIND1NUMBER", "WIND2NUMBER"]
     charstr = ["ID"]
-    realstr = ["RATEA", "RATIO", "RATIO2"]
+    realstr = ["RATEA", "RATIO", "RATIO2", "ANGLE"]
     cplxstr = ["RXACT", "YMAG"]
 
     ierr, nb = psspy.atrncount(-1, flag=1)
@@ -100,12 +100,12 @@ function transformer_branch_to_pm()
             "br_status" => 1,
             "br_r" => trn["RXACT"][i] |> real,
             "br_x" => trn["RXACT"][i] |> imag,
-            "b_fr" => 0.0,
+            "b_fr" => trn["YMAG"][i] |> imag,
             "b_to" => 0.0,
             "g_fr" => 0.0,
             "g_to" => 0.0,
             "tap" => trn["RATIO"][i] / trn["RATIO2"][i],
-            "shift" => 0.0,
+            "shift" => trn["ANGLE"][i] * pi / 180,
             "transformer" => true,            
         )
     end
@@ -362,29 +362,28 @@ function dcline_to_pm()
     hvdc = Dict{String,Any}(k[i] => @view arr[i, :] for i in eachindex(k))
 
     data = Vector{Dict{String,Any}}(undef, nb)
-    for i in 1:nb
+    for i in 1:nb        
         data[i] = Dict(
             "f_bus" => hvdc["FROMNUMBER"][i],
             "t_bus" => hvdc["TONUMBER"][i],
-            "pf" => hvdc["PQAC_R"][i] |> real,
-            "pt" => hvdc["PQAC_I"][i] |> real,
+            "pf" => hvdc["PQAC_R"][i] / baseMVA |> real,
+            "pt" => hvdc["PQAC_I"][i] / baseMVA |> real,
             "vf" => 1.0,
             "vt" => 1.0,
-            "pminf" => hvdc["PQAC_R"][i] |> real,
-            "pmaxf" => hvdc["PQAC_R"][i] |> real,
-            "qminf" => hvdc["PQAC_R"][i] |> imag,
-            "qmaxf" => hvdc["PQAC_R"][i] |> imag,
-            "pmint" => hvdc["PQAC_I"][i] |> real,
-            "pmaxt" => hvdc["PQAC_I"][i] |> real,
-            "qmint" => hvdc["PQAC_I"][i] |> imag,
-            "qmaxt" => hvdc["PQAC_I"][i] |> imag,
+            "pminf" => hvdc["PQAC_R"][i] / baseMVA |> real,
+            "pmaxf" => hvdc["PQAC_R"][i] / baseMVA |> real,
+            "qminf" => hvdc["PQAC_R"][i] / baseMVA |> imag,
+            "qmaxf" => hvdc["PQAC_R"][i] / baseMVA |> imag,
+            "pmint" => hvdc["PQAC_I"][i] / baseMVA |> real,
+            "pmaxt" => hvdc["PQAC_I"][i] / baseMVA |> real,
+            "qmint" => hvdc["PQAC_I"][i] / baseMVA |> imag,
+            "qmaxt" => hvdc["PQAC_I"][i] / baseMVA |> imag,
             "loss0" => 0.0,
             "loss1" => 0.0,
             "br_status" => 1,            
             "source_id" => ["DC", hvdc["DCNAME"][i]],
         )
     end
-
     return data
 end
 
@@ -420,13 +419,14 @@ function build_pm_data()
     fx_shunts = fx_shunt_to_pm()    
     dclines = dcline_to_pm()
 
-    # build model
+    # buses
     for bus in [buses..., starbuses...]
         i = bus["bus_i"]
         bus["index"] = bus["bus_i"]
         pm_data["bus"][string(i)] = bus
     end
     
+    # branches
     sw_idx = 1
     br_idx = 1
     for brn in [lines..., xfmr_2w..., xfmr_3w...]
@@ -448,6 +448,12 @@ function build_pm_data()
 
     end
     
+    for (i, dcline) in enumerate(dclines)
+        dcline["index"] = i
+        pm_data["dcline"][string(i)] = dcline
+    end
+
+    # components
     for (i, mach) in enumerate(machines)
         mach["index"] = i
         pm_data["gen"][string(i)] = mach
