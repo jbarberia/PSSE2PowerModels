@@ -43,9 +43,39 @@ end
 
 
 function xfmr_2w_to_psse(branch)
-    ibus, jbus, ickt = branch["source_id"][2:end]        
-    psspy.two_winding_chng_6(ibus, jbus, ickt, 
+    bus1, bus2, ickt = branch["source_id"][2:end]            
+    ierr, cw = psspy.xfrint(bus1, bus2, ickt, "CW")
+    ierr, tapped = psspy.xfrint(bus1, bus2, ickt, "TAPPED")
+    ierr, ratio  = psspy.xfrdat(bus1, bus2, ickt, "RATIO")
+    ierr, ratio2 = psspy.xfrdat(bus1, bus2, ickt, "RATIO2")
+    
+    t1 = t2 = 1.0
+    if tapped == bus1
+        t1 = branch["tap"] * ratio2
+        t2 = ratio2        
+    elseif tapped == bus2
+        t1 = ratio
+        t2 = branch["tap"]
+    end
+    
+    if cw == 2
+        ierr, base1 = psspy.busdat(bus1, "BASE")
+        ierr, base2 = psspy.busdat(bus2, "BASE")
+        t1 *= base1
+        t2 *= base2
+    elseif cw == 3
+        ierr, base_t1 = psspy.xfrdat(bus1, bus2, ickt, "NOMV1")
+        ierr, base_t2 = psspy.xfrdat(bus1, bus2, ickt, "NOMV2")
+        ierr, base_u1 = psspy.busdat(bus1, "BASE")
+        ierr, base_u2 = psspy.busdat(bus2, "BASE")
+        t1 *= (base_u1 / base_t1)
+        t2 *= (base_u2 / base_t2)
+    end
+        
+    psspy.two_winding_chng_6(bus1, bus2, ickt, 
         intgar1=branch["br_status"],
+        realari4=t1,    
+        realari7=t2,    
     )
 end
 
@@ -75,6 +105,8 @@ function machine_to_psse(gen)
         realar1=gen["pg"] * baseMVA,
         realar2=gen["qg"] * baseMVA,
     )
+    ierr, vm = psspy.busdat(ibus, "PU")
+    psspy.plant_data_4(ibus, 0, intgar1=0, realar1=vm)
     ierr, bus_type = psspy.busint(ibus, "TYPE")    
     if gen["gen_status"] == 1 && bus_type < 2
         psspy.bus_chng_4(
@@ -98,7 +130,7 @@ end
 
 function fixed_shunt_to_psse(shunt)
     baseMVA = psspy.sysmva()
-    ibus, id = shunt["source_id"][2:end]
+    ibus, id = shunt["source_id"][2:end]    
     psspy.shunt_chng(ibus, id,
         intgar1=shunt["status"],
         realar1=shunt["gs"] * baseMVA,

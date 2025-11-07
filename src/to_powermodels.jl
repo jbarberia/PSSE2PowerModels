@@ -101,7 +101,7 @@ function transformer_branch_to_pm()
         data[i] = Dict{String,Any}(
             "f_bus" => trn["WIND1NUMBER"][i],
             "t_bus" => trn["WIND2NUMBER"][i],
-            "source_id" => ["TR", trn["FROMNUMBER"][i], trn["TONUMBER"][i], trn["ID"][i]],
+            "source_id" => ["TR", trn["WIND1NUMBER"][i], trn["WIND2NUMBER"][i], trn["ID"][i]],
             "br_status" => trn["STATUS"][i],
             "br_r" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> real,   # POM 4.6 Tap Changing Transformers
             "br_x" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> imag,   # POM 4.6 Tap Changing Transformers
