@@ -26,8 +26,8 @@ function bus_to_pm()
             "area" => bus["AREA"][i],
             "zone" => bus["ZONE"][i],
             "owner" => bus["OWNER"][i],
-            "vmin" => bus["NVLMHI"][i],
-            "vmax" => bus["NVLMLO"][i],
+            "vmin" => bus["NVLMLO"][i],
+            "vmax" => bus["NVLMHI"][i],
         )
     end
 
@@ -101,8 +101,8 @@ function transformer_branch_to_pm()
             "br_r" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> real,   # POM 4.6 Tap Changing Transformers
             "br_x" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> imag,   # POM 4.6 Tap Changing Transformers
             "b_fr" => trn["YMAG"][i] |> imag,
-            "b_to" => trn["YMAG"][i] |> real,
-            "g_fr" => 0.0,
+            "b_to" => 0.0,
+            "g_fr" => trn["YMAG"][i] |> real,
             "g_to" => 0.0,
             "tap" => trn["RATIO"][i] / trn["RATIO2"][i],
             "shift" => trn["ANGLE"][i] * pi / 180,
@@ -117,7 +117,7 @@ end
 function three_winding_branch_to_pm()
     intstr = ["WNDBUSNUMBER", "WIND1NUMBER", "WIND2NUMBER", "WIND3NUMBER"]
     charstr = ["ID"]
-    realstr = ["RATEA", "RATIO"]
+    realstr = ["RATEA", "RATIO", "ANGLE"]
     cplxstr = ["RXACT"]
 
     ierr, nb = psspy.awndcount(-1, flag=2, entry=2)
@@ -129,9 +129,9 @@ function three_winding_branch_to_pm()
     # se suman numeros starbus
     starbus = []
     for i in 1:Int(size(intarr)[2] / 3)
-        push!(starbus, 1_000_00 + i)
-        push!(starbus, 1_000_00 + i)
-        push!(starbus, 1_000_00 + i)
+        push!(starbus, 1_000_000 + i)
+        push!(starbus, 1_000_000 + i)
+        push!(starbus, 1_000_000 + i)
     end
 
     arr = vcat(intarr, chararr, realarr, cplxarr)
@@ -160,7 +160,7 @@ function three_winding_branch_to_pm()
             "g_fr" => 0.0,
             "g_to" => 0.0,
             "tap" => tr3["RATIO"][i],
-            "shift" => 0.0,
+            "shift" => tr3["ANGLE"][i] * pi / 180,
             "transformer" => true,
         )
     end
@@ -306,7 +306,7 @@ function sw_shunt_to_pm()
             "source_id" => ["SWS", bus],
             "gs" => 0.0,
             "bs" => shunt["BSWNOM"][i] / baseMVA,             
-            "status" => shunt["STATUS"][i],
+            "status" => shunt["STATUS"][i] |> Int,
         )
     end
 

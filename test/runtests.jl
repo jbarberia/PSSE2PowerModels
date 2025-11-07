@@ -28,7 +28,7 @@ function solve()
     data = build_pm_data()
     resolve_switches!(data)
     merge_zi_connected_buses!(data)
-    correct_pv_bus_type!(data)    
+    correct_pv_bus_type!(data)
     set_ac_pf_start_values!(data)
     results = solve_ac_pf(data, optimizer)
     
@@ -48,7 +48,7 @@ end
 function test_voltage(data; vm_atol=1e-4, va_atol=1e-4)
     for (i, res_bus) in data["bus"]
         ibus = parse(Int, i)
-        ibus >= 100_000 && continue
+        ibus >= 1_000_000 && continue
         ierr, vm = psspy.busdat(ibus, "PU")
         ierr, va = psspy.busdat(ibus, "ANGLE")
         # @show ibus
@@ -128,8 +128,8 @@ end
 
 @testset failfast = true "COMAHUE_SIP" begin
     # Dos regiones electricas con diversos componentes
-    # ALUAR modelado    
-    psspy.case("data/COMAHUE_SIP.sav")
+    # ALUAR modelado   
+    psspy.read(0,"data/COMAHUE_SIP.raw") 
     data = solve()
     test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
     test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
@@ -138,8 +138,6 @@ end
 
 @testset failfast = true "GBA" begin
     # El GBA y lineas de 220 kV de Transener
-    # Los controles de tesnion quedan locales sobre barras de generadoras
-    # No hay control conjunto en EZ por como esta planteado el modelo en PM    
     psspy.read(0,"data/GBA.raw")    
     data = solve()
     test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
@@ -147,6 +145,14 @@ end
 end
 
 
+@testset failfast = true "SADI" begin
+    # Equivalente en el cual se saca el reactor mal modelado en Escalada 3294
+    # Se quita el corredor CRESPO - SEGUI - VIALE
+    psspy.read(0,"data/SADI_SIN_NEA.raw")        
+    data = solve()
+    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+    test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
+end
 
 
 

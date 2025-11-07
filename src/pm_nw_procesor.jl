@@ -6,6 +6,8 @@ function merge_zi_connected_buses!(data; threshold=0.0001)
         branch["br_status"] == 0 && continue
         branch["source_id"][1] != "LII" && continue
         abs(branch["br_x"]) > threshold && continue
+        abs(branch["b_fr"]) != 0.0 && continue
+        abs(branch["b_to"]) != 0.0 && continue
         
         f_bus, t_bus = branch["f_bus"]::Int, branch["t_bus"]::Int
         if !haskey(bus_sets, f_bus)
