@@ -141,6 +141,19 @@ function three_winding_branch_to_pm()
 
     brn_data = Vector{Dict{String,Any}}(undef, nb)
     for i in 1:nb
+
+        # transformer no load losses
+        if tr3["WNDBUSNUMBER"][i] == tr3["WIND1NUMBER"][i]
+            ierr, ymagnt = psspy.tr3dt2(
+                tr3["WIND1NUMBER"][i],
+                tr3["WIND2NUMBER"][i],
+                tr3["WIND3NUMBER"][i],
+                tr3["ID"][i],
+                "YMAGNT")                
+        else
+            ymagnt = 0 + 0im
+        end
+
         brn_data[i] = Dict{String,Any}(
             "f_bus" => tr3["WNDBUSNUMBER"][i],
             "t_bus" => tr3["STARBUSNUMBER"][i],
@@ -155,9 +168,9 @@ function three_winding_branch_to_pm()
             "br_status" => 1,
             "br_r" => tr3["RXACT"][i] |> real,
             "br_x" => tr3["RXACT"][i] |> imag,
-            "b_fr" => 0.0,
+            "b_fr" => ymagnt |> imag,
             "b_to" => 0.0,
-            "g_fr" => 0.0,
+            "g_fr" => ymagnt |> real,
             "g_to" => 0.0,
             "tap" => tr3["RATIO"][i],
             "shift" => tr3["ANGLE"][i] * pi / 180,

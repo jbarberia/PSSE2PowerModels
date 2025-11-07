@@ -145,16 +145,24 @@ end
 end
 
 
-@testset failfast = true "SADI" begin
+@testset failfast = true "SADI_SIN_NEA" begin
     # Equivalente en el cual se saca el reactor mal modelado en Escalada 3294
     # Se quita el corredor CRESPO - SEGUI - VIALE
-    psspy.read(0,"data/SADI_SIN_NEA.raw")        
+    psspy.read(0,"data/SADI_SIN_NEA.raw")    
     data = solve()
     test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
     test_powerflow(data; p_atol=1e-3, q_atol=1e-2)
 end
 
 
+@testset failfast = true "SADI-UTE" begin
+    # Del caso publicado por CAMMESA se abre Ayolas - Yacireta
+    # reemplazandose por una demanda equivalente
+    psspy.read(0,"data/ver2526pid.raw")
+    data = solve()
+    test_voltage(data; vm_atol=1e-3, va_atol=1e-2)
+    test_powerflow(data; p_atol=1.5e-2, q_atol=1e-2)
+end
 
 
 # @testset failfast = true "Texas66" begin
