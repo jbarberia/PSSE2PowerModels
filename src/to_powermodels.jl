@@ -5,10 +5,10 @@ function bus_to_pm()
     charstr = ["NAME"]
     realstr = ["PU", "ANGLE", "BASE", "NVLMHI", "NVLMLO"]
 
-    ierr, nb = psspy.abuscount(-1, flag=1)
-    ierr, intarr = psspy.abusint(-1, flag=1, string=intstr)
-    ierr, chararr = psspy.abuschar(-1, flag=1, string=charstr)
-    ierr, realarr = psspy.abusreal(-1, flag=1, string=realstr)
+    ierr, nb = psspy.abuscount(-1, flag=2)
+    ierr, intarr = psspy.abusint(-1, flag=2, string=intstr)
+    ierr, chararr = psspy.abuschar(-1, flag=2, string=charstr)
+    ierr, realarr = psspy.abusreal(-1, flag=2, string=realstr)
 
     arr = vcat(intarr, chararr, realarr)
     k = vcat(intstr, charstr, realstr)
@@ -36,16 +36,16 @@ end
 
 
 function non_transformer_branch_to_pm()
-    intstr = ["FROMNUMBER", "TONUMBER", "TYPE"]
+    intstr = ["FROMNUMBER", "TONUMBER", "TYPE", "STATUS"]
     charstr = ["ID"]
     realstr = ["RATEA", "CHARGING"]
     cplxstr = ["RX", "FROMSHNT", "TOSHNT"]
 
-    ierr, nb = psspy.abrncount(-1, flag=1)
-    ierr, intarr = psspy.abrnint(-1, flag=1, string=intstr)
-    ierr, chararr = psspy.abrnchar(-1, flag=1, string=charstr)
-    ierr, realarr = psspy.abrnreal(-1, flag=1, string=realstr)
-    ierr, cplxarr = psspy.abrncplx(-1, flag=1, string=cplxstr)
+    ierr, nb = psspy.abrncount(-1, flag=2)
+    ierr, intarr = psspy.abrnint(-1, flag=2, string=intstr)
+    ierr, chararr = psspy.abrnchar(-1, flag=2, string=charstr)
+    ierr, realarr = psspy.abrnreal(-1, flag=2, string=realstr)
+    ierr, cplxarr = psspy.abrncplx(-1, flag=2, string=cplxstr)
 
     arr = vcat(intarr, chararr, realarr, cplxarr)
     k = vcat(intstr, charstr, realstr, cplxstr)
@@ -56,8 +56,13 @@ function non_transformer_branch_to_pm()
         data[i] = Dict{String,Any}(
             "f_bus" => brn["FROMNUMBER"][i],
             "t_bus" => brn["TONUMBER"][i],
-            "source_id" => ["LII", brn["FROMNUMBER"][i], brn["TONUMBER"][i], brn["ID"][i]],
-            "br_status" => 1,
+            "source_id" => [
+                brn["TYPE"][i] > 0 ? "SYS" : "LII",
+                brn["FROMNUMBER"][i],
+                brn["TONUMBER"][i],
+                brn["ID"][i]
+            ],
+            "br_status" => brn["STATUS"][i],
             "br_r" => brn["RX"][i] |> real,
             "br_x" => brn["RX"][i] |> imag,
             "b_fr" => brn["CHARGING"][i] / 2 + imag(brn["FROMSHNT"][i]),
@@ -76,16 +81,16 @@ end
 
 
 function transformer_branch_to_pm()
-    intstr = ["FROMNUMBER", "TONUMBER", "WIND1NUMBER", "WIND2NUMBER"]
+    intstr = ["FROMNUMBER", "TONUMBER", "WIND1NUMBER", "WIND2NUMBER", "STATUS"]
     charstr = ["ID"]
     realstr = ["RATEA", "RATIO", "RATIO2", "ANGLE"]
     cplxstr = ["RXACT", "YMAG"]
 
-    ierr, nb = psspy.atrncount(-1, flag=1)
-    ierr, intarr = psspy.atrnint(-1, flag=1, string=intstr)
-    ierr, chararr = psspy.atrnchar(-1, flag=1, string=charstr)
-    ierr, realarr = psspy.atrnreal(-1, flag=1, string=realstr)
-    ierr, cplxarr = psspy.atrncplx(-1, flag=1, string=cplxstr)
+    ierr, nb = psspy.atrncount(-1, flag=2)
+    ierr, intarr = psspy.atrnint(-1, flag=2, string=intstr)
+    ierr, chararr = psspy.atrnchar(-1, flag=2, string=charstr)
+    ierr, realarr = psspy.atrnreal(-1, flag=2, string=realstr)
+    ierr, cplxarr = psspy.atrncplx(-1, flag=2, string=cplxstr)
 
     arr = vcat(intarr, chararr, realarr, cplxarr)
     k = vcat(intstr, charstr, realstr, cplxstr)
@@ -97,7 +102,7 @@ function transformer_branch_to_pm()
             "f_bus" => trn["WIND1NUMBER"][i],
             "t_bus" => trn["WIND2NUMBER"][i],
             "source_id" => ["TR", trn["FROMNUMBER"][i], trn["TONUMBER"][i], trn["ID"][i]],
-            "br_status" => 1,
+            "br_status" => trn["STATUS"][i],
             "br_r" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> real,   # POM 4.6 Tap Changing Transformers
             "br_x" => (trn["RXACT"][i] * trn["RATIO2"][i]^2) |> imag,   # POM 4.6 Tap Changing Transformers
             "b_fr" => trn["YMAG"][i] |> imag,
@@ -115,16 +120,16 @@ end
 
 
 function three_winding_branch_to_pm()
-    intstr = ["WNDBUSNUMBER", "WIND1NUMBER", "WIND2NUMBER", "WIND3NUMBER"]
+    intstr = ["WNDBUSNUMBER", "WIND1NUMBER", "WIND2NUMBER", "WIND3NUMBER", "WNDNUM", "STATUS"]
     charstr = ["ID"]
     realstr = ["RATEA", "RATIO", "ANGLE"]
     cplxstr = ["RXACT"]
 
-    ierr, nb = psspy.awndcount(-1, flag=2, entry=2)
-    ierr, intarr = psspy.awndint(-1, flag=2, entry=2, string=intstr)
-    ierr, chararr = psspy.awndchar(-1, flag=2, entry=2, string=charstr)
-    ierr, realarr = psspy.awndreal(-1, flag=2, entry=2, string=realstr)
-    ierr, cplxarr = psspy.awndcplx(-1, flag=2, entry=2, string=cplxstr)
+    ierr, nb = psspy.awndcount(-1, flag=3, entry=2)
+    ierr, intarr = psspy.awndint(-1, flag=3, entry=2, string=intstr)
+    ierr, chararr = psspy.awndchar(-1, flag=3, entry=2, string=charstr)
+    ierr, realarr = psspy.awndreal(-1, flag=3, entry=2, string=realstr)
+    ierr, cplxarr = psspy.awndcplx(-1, flag=3, entry=2, string=cplxstr)
 
     # se suman numeros starbus
     starbus = []
@@ -143,7 +148,7 @@ function three_winding_branch_to_pm()
     for i in 1:nb
 
         # transformer no load losses
-        if tr3["WNDBUSNUMBER"][i] == tr3["WIND1NUMBER"][i]
+        if tr3["WNDNUM"][i] == 1
             ierr, ymagnt = psspy.tr3dt2(
                 tr3["WIND1NUMBER"][i],
                 tr3["WIND2NUMBER"][i],
@@ -163,9 +168,9 @@ function three_winding_branch_to_pm()
                 tr3["WIND2NUMBER"][i],
                 tr3["WIND3NUMBER"][i],
                 tr3["ID"][i],
-                tr3["WNDBUSNUMBER"][i]
+                tr3["WNDNUM"][i]
             ],
-            "br_status" => 1,
+            "br_status" => tr3["STATUS"][i],
             "br_r" => tr3["RXACT"][i] |> real,
             "br_x" => tr3["RXACT"][i] |> imag,
             "b_fr" => ymagnt |> imag,
@@ -228,11 +233,11 @@ function machine_to_pm()
     realstr = ["PGEN", "QGEN", "PMAX", "PMIN", "QMAX", "QMIN"]
     cplxstr = ["ZSORCE"]
 
-    ierr, nb = psspy.amachcount(-1, flag=1)
-    ierr, intarr = psspy.amachint(-1,  flag=1, string=intstr)
-    ierr, chararr = psspy.amachchar(-1, flag=1, string=charstr)
-    ierr, realarr = psspy.amachreal(-1, flag=1, string=realstr)
-    ierr, cplxarr = psspy.amachcplx(-1, flag=1, string=cplxstr)
+    ierr, nb = psspy.amachcount(-1, flag=2)
+    ierr, intarr = psspy.amachint(-1,  flag=2, string=intstr)
+    ierr, chararr = psspy.amachchar(-1, flag=2, string=charstr)
+    ierr, realarr = psspy.amachreal(-1, flag=2, string=realstr)
+    ierr, cplxarr = psspy.amachcplx(-1, flag=2, string=cplxstr)
 
     arr = vcat(intarr, chararr, realarr, cplxarr)
     k = vcat(intstr, charstr, realstr, cplxstr)
@@ -443,21 +448,22 @@ function build_pm_data()
     sw_idx = 1
     br_idx = 1
     for brn in [lines..., xfmr_2w..., xfmr_3w...]
-        if get(brn, "switch", false)
-            brn["psw"] = 0.0
-            brn["qsw"] = 0.0
-            brn["state"] = brn["br_status"]
-            brn["status"] = 1
-            brn["index"] = sw_idx
-            pm_data["switch"][string(sw_idx)] = brn
-            sw_idx += 1
-        else
+        #if get(brn, "switch", false)
+        #    brn["psw"] = 0.0
+        #    brn["qsw"] = 0.0
+        #    brn["state"] = brn["br_status"]
+        #    brn["status"] = 1
+        #    brn["index"] = sw_idx
+        #    brn["source_id"][1] = "SYS"
+        #    pm_data["switch"][string(sw_idx)] = brn
+        #    sw_idx += 1
+        #else
             brn["index"] = br_idx
             brn["angmin"] = -pi / 6
             brn["angmax"] =  pi / 6
             pm_data["branch"][string(br_idx)] = brn
             br_idx += 1
-        end
+        #end
 
     end
     
