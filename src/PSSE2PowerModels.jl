@@ -1,7 +1,6 @@
 module PSSE2PowerModels
     using PowerModels
     using PyCall
-    using Graphs
 
     const psspy = PyNULL()
     function __init__()
@@ -12,7 +11,6 @@ module PSSE2PowerModels
     include("to_powermodels.jl")
     include("to_psse.jl")
     include("pm_nw_procesor.jl")
-    #include("parser.jl")
 
     export psspy
     export build_pm_data
