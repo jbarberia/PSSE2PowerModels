@@ -1,4 +1,4 @@
-module PowerNetworkModeling
+module PSSE2PowerModels
     using PowerModels
     using PyCall
     using Graphs
