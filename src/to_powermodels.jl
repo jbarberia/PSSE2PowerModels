@@ -233,11 +233,11 @@ function machine_to_pm()
     realstr = ["PGEN", "QGEN", "PMAX", "PMIN", "QMAX", "QMIN"]
     cplxstr = ["ZSORCE"]
 
-    ierr, nb = psspy.amachcount(-1, flag=2)
-    ierr, intarr = psspy.amachint(-1,  flag=2, string=intstr)
-    ierr, chararr = psspy.amachchar(-1, flag=2, string=charstr)
-    ierr, realarr = psspy.amachreal(-1, flag=2, string=realstr)
-    ierr, cplxarr = psspy.amachcplx(-1, flag=2, string=cplxstr)
+    ierr, nb = psspy.amachcount(-1, flag=4)
+    ierr, intarr = psspy.amachint(-1,  flag=4, string=intstr)
+    ierr, chararr = psspy.amachchar(-1, flag=4, string=charstr)
+    ierr, realarr = psspy.amachreal(-1, flag=4, string=realstr)
+    ierr, cplxarr = psspy.amachcplx(-1, flag=4, string=cplxstr)
 
     arr = vcat(intarr, chararr, realarr, cplxarr)
     k = vcat(intstr, charstr, realstr, cplxstr)
