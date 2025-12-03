@@ -35,12 +35,20 @@
     correct_pv_bus_type!(data_2)
 
     # comparacion
-    @testset "comparacion de casos" begin 
+    @testset "comparacion de barras" begin 
         for (i, bus) in data_1["bus"]
             parse(Int, i) > 1_000_000 && continue
             # @show i          
             @test compare_dict(data_1["bus"][i], data_2["bus"][i], atol=1e-2)
         end                
     end
+    
+    @testset "comparacion de demandas" begin 
+        for (i, load) in data_1["load"]            
+            @test compare_dict(data_1["load"][i], data_2["load"][i], atol=1e-2)
+        end                
+    end
+
+
 end
 
