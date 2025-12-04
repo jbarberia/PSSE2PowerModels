@@ -288,6 +288,7 @@ function load_to_pm()
 
     data = Vector{Dict{String,Any}}(undef, nb)
     for i in 1:nb
+        ierr, load_owner = psspy.lodint(load["NUMBER"][i], load["ID"][i], "OWNER")
         data[i] = Dict(
             "load_bus" => load["NUMBER"][i],            
             "source_id" => ["LO", load["NUMBER"][i], load["ID"][i]],
@@ -295,6 +296,7 @@ function load_to_pm()
             "qd" => load["MVANOM"][i] / baseMVA |> imag ,            
             "scalable" => load["SCALE"][i],
             "status" => load["STATUS"][i],
+            "load_owner" => load_owner,
         )
     end
 

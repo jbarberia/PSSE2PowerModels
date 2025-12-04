@@ -122,6 +122,7 @@ function load_to_psse(load)
     ibus, id = load["source_id"][2:end]
     psspy.load_data_5(ibus, id, 
         intgar1=load["status"],
+        intgar4=load["load_owner"],
         intgar5=load["scalable"],
         realar1=load["pd"] * baseMVA,
         realar2=load["qd"] * baseMVA,
