@@ -11,3 +11,4 @@ psspy.progress_output(6) # No output
 include("utils.jl")
 include("psse2pm.jl")
 include("pm2psse.jl")
+include("controls.jl")

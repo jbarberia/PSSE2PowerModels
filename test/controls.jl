@@ -1,0 +1,72 @@
+
+@testset failfast = true "verificacion_taps_3W" begin
+    psspy.read(0,"data/ver2526pid.raw")
+    data = build_pm_data()
+    merge_zi_connected_buses!(data)
+    correct_pv_bus_type!(data)
+    
+    source2idx = Dict(brn["source_id"] => i for (i, brn) in data["branch"])
+    
+    # modify tap of 3W transformer T7EZ
+    index_T7EZ = source2idx[["T3", 3000, 3110, 3702, "7 ", 2]]
+    old_t7_tap = data["branch"][index_T7EZ]["tap"]     
+    new_t7_tap = data["branch"][index_T7EZ]["tap"] = data["branch"][index_T7EZ]["tm_min"]
+    
+    build_psse_data(data)
+    ierr, t7_tap = psspy.wnddat(3110, 3702, 3000, "7 ", "RATIO")
+
+    @test t7_tap != old_t7_tap
+    @test isapprox(t7_tap, new_t7_tap, atol=1e-4)
+
+
+    # 500 kV is not tapped
+    index_T7EZ = source2idx[["T3", 3000, 3110, 3702, "7 ", 1]]
+    w1 = data["branch"][index_T7EZ]
+    @test isapprox(w1["tap"], w1["tm_min"], atol=1e-4)
+    @test isapprox(w1["tap"], w1["tm_max"], atol=1e-4)
+end
+
+
+@testset failfast = true "verificacion_taps_2W" begin
+    psspy.read(0,"data/ver2526pid.raw")
+    data = build_pm_data()
+    merge_zi_connected_buses!(data)
+    correct_pv_bus_type!(data)
+    
+    source2idx = Dict(brn["source_id"] => i for (i, brn) in data["branch"])
+
+    # modify tap of 2W
+    index_mesespi = source2idx[["TR", 478, 477, "1 "]]
+    old_mesespi_tap = data["branch"][index_mesespi]["tap"]     
+    new_mesespi_tap = data["branch"][index_mesespi]["tap"] = data["branch"][index_mesespi]["tm_min"]
+    
+    build_psse_data(data)
+    ierr, mesespi_tap = psspy.xfrdat(477, 478, "1 ", "RATIO")
+    
+    @test mesespi_tap != old_mesespi_tap
+    @test isapprox(mesespi_tap, new_mesespi_tap, atol=1e-4)
+end
+
+
+@testset failfast = true "verificacion_taps_3W_approx" begin
+    # off step turn ratio - T7EZ has 233 kV nominal voltage
+    # it sets to 220 kV so PSSE force to 219 kV.
+    psspy.read(0,"data/ver2526pid.raw")
+    data = build_pm_data()
+    merge_zi_connected_buses!(data)
+    correct_pv_bus_type!(data)
+    
+    source2idx = Dict(brn["source_id"] => i for (i, brn) in data["branch"])
+    
+    # modify tap of 3W transformer T7EZ
+    index_T7EZ = source2idx[["T3", 3000, 3110, 3702, "7 ", 2]]
+    old_t7_tap = data["branch"][index_T7EZ]["tap"]     
+    new_t7_tap = data["branch"][index_T7EZ]["tap"] = 1.0
+    
+    build_psse_data(data)
+    ierr, t7_tap = psspy.wnddat(3110, 3702, 3000, "7 ", "RATIO")
+
+    @test t7_tap != old_t7_tap
+    @test t7_tap != new_t7_tap
+    @test isapprox(t7_tap, 219/220, atol=1e-4)
+end

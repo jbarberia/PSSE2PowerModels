@@ -83,7 +83,7 @@ end
 function transformer_branch_to_pm()
     intstr = ["FROMNUMBER", "TONUMBER", "WIND1NUMBER", "WIND2NUMBER", "STATUS"]
     charstr = ["ID"]
-    realstr = ["RATEA", "RATIO", "RATIO2", "ANGLE"]
+    realstr = ["RATEA", "RATIO", "RATIO2", "ANGLE", "RMAX", "RMIN"]
     cplxstr = ["RXACT", "YMAG"]
 
     ierr, nb = psspy.atrncount(-1, flag=2)
@@ -110,6 +110,8 @@ function transformer_branch_to_pm()
             "g_fr" => trn["YMAG"][i] |> real,
             "g_to" => 0.0,
             "tap" => trn["RATIO"][i] / trn["RATIO2"][i],
+            "tm_min" => trn["RMIN"][i] / trn["RATIO2"][i],
+            "tm_max" => trn["RMAX"][i] / trn["RATIO2"][i],
             "shift" => trn["ANGLE"][i] * pi / 180,
             "transformer" => true,            
         )
@@ -120,9 +122,9 @@ end
 
 
 function three_winding_branch_to_pm()
-    intstr = ["WNDBUSNUMBER", "WIND1NUMBER", "WIND2NUMBER", "WIND3NUMBER", "WNDNUM", "STATUS"]
+    intstr = ["WNDBUSNUMBER", "WIND1NUMBER", "WIND2NUMBER", "WIND3NUMBER", "WNDNUM", "STATUS", "NTPOSN", "CODE"]
     charstr = ["ID"]
-    realstr = ["RATEA", "RATIO", "ANGLE"]
+    realstr = ["RATEA", "RATIO", "ANGLE", "RMAX", "RMIN"]
     cplxstr = ["RXACT"]
 
     ierr, nb = psspy.awndcount(-1, flag=3, entry=2)
@@ -146,6 +148,7 @@ function three_winding_branch_to_pm()
 
     brn_data = Vector{Dict{String,Any}}(undef, nb)
     for i in 1:nb
+        fixed_tap = tr3["NTPOSN"][i] == 33 || tr3["CODE"][i] != 1
 
         # transformer no load losses
         if tr3["WNDNUM"][i] == 1
@@ -180,6 +183,8 @@ function three_winding_branch_to_pm()
             "tap" => tr3["RATIO"][i],
             "shift" => tr3["ANGLE"][i] * pi / 180,
             "transformer" => true,
+            "tm_min" => fixed_tap ? tr3["RATIO"][i] : tr3["RMIN"][i],
+            "tm_max" => fixed_tap ? tr3["RATIO"][i] : tr3["RMAX"][i],
         )
     end
 
@@ -308,7 +313,7 @@ function sw_shunt_to_pm()
     baseMVA = psspy.sysmva()
 
     intstr = ["NUMBER", "AREA", "ZONE", "OWNER", "STATUS"]    
-    realstr = ["BSWNOM"]    
+    realstr = ["BSWNOM", "BSWMAX", "BSWMIN"]    
 
     ierr, nb = psspy.aswshcount(-1, flag=1)
     ierr, intarr = psspy.aswshint(-1,  flag=1, string=intstr)
@@ -326,6 +331,8 @@ function sw_shunt_to_pm()
             "source_id" => ["SWS", bus],
             "gs" => 0.0,
             "bs" => shunt["BSWNOM"][i] / baseMVA,             
+            "bs_min" => shunt["BSWMIN"][i] / baseMVA,             
+            "bs_max" => shunt["BSWMAX"][i] / baseMVA,             
             "status" => shunt["STATUS"][i] |> Int,
         )
     end

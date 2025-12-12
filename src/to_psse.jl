@@ -92,7 +92,9 @@ function xfmr_3w_to_psse(branch)
     ierr, cw = psspy.tr3int(ibus, jbus, kbus, ickt, "CW")
     base = cw != 2 ? 1.0 : [base1, base2, base3][warg]
     psspy.three_wnd_winding_data_5(ibus, jbus, kbus, ickt, warg,
-        realari1 = branch["tap"] * base
+        realari1 = branch["tap"] * base,
+        realari4 = branch["tm_max"] * base,
+        realari5 = branch["tm_min"] * base,
     )
 end
 
