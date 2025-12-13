@@ -70,3 +70,27 @@ end
     @test t7_tap != new_t7_tap
     @test isapprox(t7_tap, 219/220, atol=1e-4)
 end
+
+
+@testset failfast = true "verificacion_control_con_zi" begin
+    psspy.read(0,"data/ver2526pid.raw")
+    data = build_pm_data()
+    merge_zi_connected_buses!(data)
+    correct_pv_bus_type!(data)
+    
+    source2idx = Dict(brn["source_id"] => i for (i, brn) in data["branch"])
+    
+    # En olavarria los controles van a barras por separado
+    index_T1OL = source2idx[["T3", 2008, 2296, 2505, "1 ", 1]]
+    index_T2OL = source2idx[["T3", 2008, 2298, 2506, "2 ", 1]]
+    T1OL = data["branch"][index_T1OL]
+    T2OL = data["branch"][index_T2OL]
+    @test T1OL["control_bus"] == T2OL["control_bus"]
+    
+    # En campana los controles van a la misma barra
+    index_T1CA = source2idx[["T3", 2002, 2292, 2804, "1 ", 1]]
+    index_T2CA = source2idx[["T3", 2002, 2294, 2823, "2 ", 1]]
+    T1CA = data["branch"][index_T1CA]
+    T2CA = data["branch"][index_T2CA]
+    @test T1CA["control_bus"] == T2CA["control_bus"]
+end

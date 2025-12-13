@@ -55,6 +55,11 @@ function merge_zi_connected_buses!(data; threshold=0.0001)
             @info("zero impedance connection of branch $(i) - $(branch["source_id"]) has same from and to buses: $(branch["f_bus"]), deactivating branch")
             branch[pm_component_status["branch"]] = pm_component_status_inactive["branch"]
         end
+        
+        # set control to grouped bus 
+        if haskey(branch, "control_bus")
+            branch["control_bus"] = get(bus_id_map, branch["control_bus"], branch["control_bus"])
+        end
     end
     
     for (i, dcline) in data["dcline"]

@@ -122,9 +122,9 @@ end
 
 
 function three_winding_branch_to_pm()
-    intstr = ["WNDBUSNUMBER", "WIND1NUMBER", "WIND2NUMBER", "WIND3NUMBER", "WNDNUM", "STATUS", "NTPOSN", "CODE"]
+    intstr = ["WNDBUSNUMBER", "WIND1NUMBER", "WIND2NUMBER", "WIND3NUMBER", "WNDNUM", "STATUS", "NTPOSN", "CODE", "ICONTNUMBER"]
     charstr = ["ID"]
-    realstr = ["RATEA", "RATIO", "ANGLE", "RMAX", "RMIN"]
+    realstr = ["RATEA", "RATIO", "ANGLE", "RMAX", "RMIN", "VMAX", "VMIN"]
     cplxstr = ["RXACT"]
 
     ierr, nb = psspy.awndcount(-1, flag=3, entry=2)
@@ -185,6 +185,9 @@ function three_winding_branch_to_pm()
             "transformer" => true,
             "tm_min" => fixed_tap ? tr3["RATIO"][i] : tr3["RMIN"][i],
             "tm_max" => fixed_tap ? tr3["RATIO"][i] : tr3["RMAX"][i],
+            "control_bus" => tr3["ICONTNUMBER"][i],
+            "vm_min" => tr3["VMIN"][i],
+            "vm_max" => tr3["VMAX"][i],
         )
     end
 
