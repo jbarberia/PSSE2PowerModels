@@ -315,8 +315,8 @@ end
 function sw_shunt_to_pm()
     baseMVA = psspy.sysmva()
 
-    intstr = ["NUMBER", "AREA", "ZONE", "OWNER", "STATUS"]    
-    realstr = ["BSWNOM", "BSWMAX", "BSWMIN"]    
+    intstr = ["NUMBER", "AREA", "ZONE", "OWNER", "STATUS", "MODE"]    
+    realstr = ["BSWNOM", "BSWMAX", "BSWMIN", "VSWLO", "VSWHI"]    
 
     ierr, nb = psspy.aswshcount(-1, flag=1)
     ierr, intarr = psspy.aswshint(-1,  flag=1, string=intstr)
@@ -335,8 +335,11 @@ function sw_shunt_to_pm()
             "gs" => 0.0,
             "bs" => shunt["BSWNOM"][i] / baseMVA,             
             "bs_min" => shunt["BSWMIN"][i] / baseMVA,             
-            "bs_max" => shunt["BSWMAX"][i] / baseMVA,             
+            "bs_max" => shunt["BSWMAX"][i] / baseMVA,     
             "status" => shunt["STATUS"][i] |> Int,
+            "mode" => shunt["MODE"][i],
+            "vm_min" => shunt["VSWLO"][i],        
+            "vm_max" => shunt["VSWHI"][i],        
         )
     end
 

@@ -94,3 +94,28 @@ end
     T2CA = data["branch"][index_T2CA]
     @test T1CA["control_bus"] == T2CA["control_bus"]
 end
+
+
+@testset failfast=true "verificacion shunt" begin
+    # a proposito se setea el shunt a -40 MVAR para verificar que el PSSE
+    # lo redondea al valor nominal
+    # esto sucede luego de correr el flujo con todo bloqueado
+    psspy.read(0,"data/ver2526pid.raw")
+    data = build_pm_data()
+    merge_zi_connected_buses!(data)
+    correct_pv_bus_type!(data)
+
+    source2idx = Dict(sh["source_id"] => i for (i, sh) in data["shunt"])
+    index_zn = source2idx[["SWS", 12]]
+    shunt_zn = data["shunt"][index_zn]
+
+    old_b = shunt_zn["bs"]
+    new_b = shunt_zn["bs"] = -0.4
+
+    build_psse_data(data)
+    psspy.fnsl(options1=0, options5=0)
+    ierr, binit = psspy.swsdt1(12, "BINIT")
+
+    @test isapprox(binit, -50.0, atol=1e-4)
+    @test old_b != new_b
+end
