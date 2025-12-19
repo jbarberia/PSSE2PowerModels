@@ -49,16 +49,18 @@ function xfmr_2w_to_psse(branch)
     ierr, ratio  = psspy.xfrdat(bus1, bus2, ickt, "RATIO")
     ierr, ratio2 = psspy.xfrdat(bus1, bus2, ickt, "RATIO2")
     
+    base = 1.0
     t1 = t2 = 1.0
     if tapped == bus1
         t1 = branch["tap"] * ratio2
         t2 = ratio2        
     elseif tapped == bus2
         t1 = ratio
-        t2 = branch["tap"]
+        t2 = branch["tap"]        
     end
     
     if cw == 2
+        ierr, base = psspy.busdat(bus1, "BASE")
         ierr, base1 = psspy.busdat(bus1, "BASE")
         ierr, base2 = psspy.busdat(bus2, "BASE")
         t1 *= base1
@@ -68,6 +70,7 @@ function xfmr_2w_to_psse(branch)
         ierr, base_t2 = psspy.xfrdat(bus1, bus2, ickt, "NOMV2")
         ierr, base_u1 = psspy.busdat(bus1, "BASE")
         ierr, base_u2 = psspy.busdat(bus2, "BASE")
+        base = base_u1 / base_t1 
         t1 *= (base_u1 / base_t1)
         t2 *= (base_u2 / base_t2)
     end
@@ -77,6 +80,15 @@ function xfmr_2w_to_psse(branch)
         realari4=t1,    
         realari7=t2,    
     )
+
+    if branch["control_mode"] > 0
+        psspy.two_winding_chng_6(bus1, bus2, ickt, 
+            realari15 = branch["tm_max"] * base,
+            realari16 = branch["tm_min"] * base,
+            realari17 = branch["vm_max"],
+            realari18 = branch["vm_min"],
+        )
+    end
 end
 
 
@@ -91,11 +103,19 @@ function xfmr_3w_to_psse(branch)
     ierr, base3 = psspy.busdat(kbus, "BASE")
     ierr, cw = psspy.tr3int(ibus, jbus, kbus, ickt, "CW")
     base = cw != 2 ? 1.0 : [base1, base2, base3][warg]
+    
     psspy.three_wnd_winding_data_5(ibus, jbus, kbus, ickt, warg,
-        realari1 = branch["tap"] * base,
-        realari4 = branch["tm_max"] * base,
-        realari5 = branch["tm_min"] * base,
+        realari1 = branch["tap"] * base,        
     )
+    
+    if branch["control_mode"] > 0
+        psspy.three_wnd_winding_data_5(ibus, jbus, kbus, ickt, warg,
+            realari4 = branch["tm_max"] * base,
+            realari5 = branch["tm_min"] * base,
+            realari6 = branch["vm_max"],
+            realari7 = branch["vm_min"],
+        )
+    end
 end
 
 

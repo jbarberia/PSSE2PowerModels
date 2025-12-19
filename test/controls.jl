@@ -19,11 +19,12 @@
     @test isapprox(t7_tap, new_t7_tap, atol=1e-4)
 
 
-    # 500 kV is not tapped
+    # 500 kV is not tapped - default values
     index_T7EZ = source2idx[["T3", 3000, 3110, 3702, "7 ", 1]]
     w1 = data["branch"][index_T7EZ]
-    @test isapprox(w1["tap"], w1["tm_min"], atol=1e-4)
-    @test isapprox(w1["tap"], w1["tm_max"], atol=1e-4)
+    @test isapprox(w1["tap"], 1.0, atol=1e-4)
+    @test isapprox(w1["tm_min"], 0.9, atol=1e-4)
+    @test isapprox(w1["tm_max"], 1.1, atol=1e-4)
 end
 
 

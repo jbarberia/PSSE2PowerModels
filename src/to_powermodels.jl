@@ -81,9 +81,9 @@ end
 
 
 function transformer_branch_to_pm()
-    intstr = ["FROMNUMBER", "TONUMBER", "WIND1NUMBER", "WIND2NUMBER", "STATUS"]
+    intstr = ["FROMNUMBER", "TONUMBER", "WIND1NUMBER", "WIND2NUMBER", "STATUS", "ICONTNUMBER", "CODE", "NTPOSN"]
     charstr = ["ID"]
-    realstr = ["RATEA", "RATIO", "RATIO2", "ANGLE", "RMAX", "RMIN"]
+    realstr = ["RATEA", "RATIO", "RATIO2", "ANGLE", "RMAX", "RMIN", "VMAX", "VMIN"]
     cplxstr = ["RXACT", "YMAG"]
 
     ierr, nb = psspy.atrncount(-1, flag=2)
@@ -113,7 +113,13 @@ function transformer_branch_to_pm()
             "tm_min" => trn["RMIN"][i] / trn["RATIO2"][i],
             "tm_max" => trn["RMAX"][i] / trn["RATIO2"][i],
             "shift" => trn["ANGLE"][i] * pi / 180,
-            "transformer" => true,            
+            "transformer" => true,     
+            "tm_min" => trn["RMIN"][i],
+            "tm_max" => trn["RMAX"][i],
+            "control_bus" => trn["ICONTNUMBER"][i],
+            "control_mode" => trn["CODE"][i],
+            "vm_min" => trn["VMIN"][i],
+            "vm_max" => trn["VMAX"][i],       
         )
     end
 
@@ -183,9 +189,10 @@ function three_winding_branch_to_pm()
             "tap" => tr3["RATIO"][i],
             "shift" => tr3["ANGLE"][i] * pi / 180,
             "transformer" => true,
-            "tm_min" => fixed_tap ? tr3["RATIO"][i] : tr3["RMIN"][i],
-            "tm_max" => fixed_tap ? tr3["RATIO"][i] : tr3["RMAX"][i],
+            "tm_min" => tr3["RMIN"][i],
+            "tm_max" => tr3["RMAX"][i],
             "control_bus" => tr3["ICONTNUMBER"][i],
+            "control_mode" => tr3["CODE"][i],
             "vm_min" => tr3["VMIN"][i],
             "vm_max" => tr3["VMAX"][i],
         )
