@@ -4,7 +4,8 @@ module PSSE2PowerModels
 
     const psspy = PyNULL()
     function __init__()
-        pyimport("psse34")
+        Sys.WORD_SIZE == 32 && pyimport("psse34")
+        Sys.WORD_SIZE == 64 && pyimport("psse3606")
         copy!(psspy, pyimport("psspy"))        
     end
     
